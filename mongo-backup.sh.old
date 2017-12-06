@@ -1,0 +1,33 @@
+#!/bin/sh
+WKDIR=/data/backup
+DIR=`date +%F-%T`
+DEST=/data/backup/$DIR
+LOG=$WKDIR/backup.log
+ERR='zz_FAILED_BACKUP_'$DIR
+REMLOG=$WKDIR/removed.log
+
+mkdir $DEST
+/usr/bin/mongodump --host localhost --port 27017 --username=mongo --password=mongo --out $DEST \
+>> $LOG 2>&1
+
+
+
+# Error catching & notification
+if [ $? -ne 0 ]; then
+	echo "*** MongoDump failed!..Now exiting. ***"
+    # echo "mongodump failed, exiting" &>> $LOG
+    # cat $LOG | mail -s "$HOST/$DB mongo archive & delete" -r ${FROM} ${MAILTO}
+    mv $DEST /data/backup/$ERR
+    echo "### Backup failed" &>> $LOG 
+    exit 1
+else
+	echo "### Backup complete" &>> $LOG
+	# min_dirs=3
+
+	# [[ $(find "$WKDIR" -maxdepth 1 -type d | wc -l) -ge $min_dirs ]] &&
+	# IFS= read -r -d $'\0' line < <(find "$WKDIR" -maxdepth 1 -printf '%T@ %p\0' 2>/dev/null | sort -z -n)
+	# file="${line#* }"
+	# echo "REMOVED " $file &>> $REMLOG 
+	# ls -lLd "$file"
+	# rm -rf "$file"
+fi
